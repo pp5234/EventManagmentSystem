@@ -1,13 +1,12 @@
 import express from 'express';
-import { DbConnection } from './db.js'
+import { DbConnection } from './config/db.js'
+import login from './routes/loginRoute.js'
 
 const app = express();
 const port = process.env.PORT
 
-
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
+app.use(express.json());
+app.use('/api/login', login)
 
 DbConnection().
     then( () => {
