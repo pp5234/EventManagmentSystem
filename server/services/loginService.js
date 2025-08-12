@@ -1,31 +1,27 @@
 import pool from "../config/db.js";
 import bcrypt from 'bcrypt';
+import {BadRequestError, NotFoundError, UnauthorizedError} from "../utils/appErrors.js";
 
-export function extractLoginCredentials(req) {
-    const results = { name: req.body.name, surname: req.body.surname, email: req.body.email, password: req.body.password }
+export async function extractLoginCredentials(req) {
+    const results = { name: req.body.name, surname: req.body.surname, email: req.body.email, password: req.body.password}
     if (!results.name || !results.surname || !results.email || !results.password)
-        throw Error("Requst body is in the bad format")
+        throw new BadRequestError("Invalid credentials");
     return results;
 }
 
-export async function getClientDb (email) {
+export async function getClientByEmail (email) {
         const [rows] = await pool.query('SELECT * FROM client WHERE email = ?', [email]);
         if(!rows.length > 0)
-            throw  Error("Failed to retrieve user from the database")
+            throw new NotFoundError("User doesn't exist for email: " + email);
         return rows;
 }
 
-export async function verifyPassword (password, hashedPassword) {
-    if (!await bcrypt.compare(password, hashedPassword))
-        throw Error('Password not match');
-}
-
-export function verifyName (name, surname, nameDb, surnameDb) {
-    if (!(name === nameDb && surname === surnameDb))
-        throw Error('Name isn\'t valid');
-}
-
-export function isValidStatus(statusDb){
-    if (statusDb === 0)
-        throw Error('User\'s status is disabled');
+export async function verifyCredentials(credentials, dbCredentials) {
+    const match = await bcrypt.compare(credentials.password, dbCredentials.password)
+    if (!match)
+        throw new UnauthorizedError ('Password not match');
+    if (!(credentials.name === dbCredentials.name && credentials.surname === dbCredentials.surname))
+        throw new UnauthorizedError('Name isn\'t valid');
+    if (dbCredentials.status === 0)
+        throw new UnauthorizedError("User has inactive status");
 }

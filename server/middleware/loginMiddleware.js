@@ -1,19 +1,17 @@
-import { extractLoginCredentials, getClientDb, verifyPassword, isValidStatus, verifyName } from '../services/loginService.js'
+import {extractLoginCredentials, getClientByEmail, verifyCredentials} from '../services/loginService.js'
 
-export async function verifyCredentials (req, res, next) {
+export default async function loginMiddleware(req, res, next) {
     try {
-        const client = extractLoginCredentials(req)
-        const clientDb = await getClientDb(client.email);
+        const client = await extractLoginCredentials(req)
+        const dbClient = await getClientByEmail(client.email);
 
-        verifyPassword(client.password, clientDb[0].password);
-        verifyName(client.name, clientDb[0].name, client.surname, clientDb[0].surname);
-        isValidStatus(clientDb[0].status);
-
-        req.user = clientDb[0];
-
+        await verifyCredentials(client, dbClient[0])
+        req.user = dbClient[0];
         next()
     } catch (error) {
-        console.log(error);
+        console.log(error.message);
+        if(error.code)
+            res.status(error.code).json({ error: error.type });
+        res.status(500).json({ error: "INTERNAL_ERROR"});
     }
-
 }

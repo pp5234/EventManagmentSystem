@@ -1,11 +1,10 @@
 import express from 'express';
 import loginController from "../controllers/loginController.js";
-import {verifyCredentials} from "../middleware/loginMiddleware.js";
+import loginMiddleware from "../middleware/loginMiddleware.js";
 
 const router = express.Router();
 
-
-router.post('/', verifyCredentials, loginController);
+router.post('/', loginMiddleware, loginController);
 
 export default router
 
