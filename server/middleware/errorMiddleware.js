@@ -12,6 +12,10 @@ export function errorMiddleware(err, req, res, next) {
         return res.status(err.status).json({ code: err.type });
     }
 
+    if(err.message.includes("Duplicate entry")) {
+        return res.status(400).json({ code: "BAD_REQUEST" });
+    }
+
     return res.status(500).json({ code: "INTERNAL_ERROR" });
 }
 
