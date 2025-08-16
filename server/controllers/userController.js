@@ -36,7 +36,7 @@ export async function updateUserController(req, res, next) {
     try {
         const id = req.params.id
         const {email, name, surname, type, password} = req.body
-        if(id === undefined)
+        if(id === undefined || isNaN(id))
             return next(new BadRequestError("User id is undefined"))
 
         await updateUser(id, email, name, surname, type, password)
@@ -53,7 +53,7 @@ export async function changeUserStatusController(req, res, next) {
     try {
         const id = req.params.id
 
-        if(id === undefined)
+        if(id === undefined || isNaN(id))
             return next(new BadRequestError("User id is undefined"))
 
         await changeUserStatus(id)
@@ -68,7 +68,7 @@ export async function changeUserStatusController(req, res, next) {
 export async function deleteUserController(req, res, next) {
     try {
         const id = req.params.id
-        if(id === undefined)
+        if(id === undefined || isNaN(id))
             return next(new BadRequestError("User id is undefined"))
 
         await deleteUser(id)

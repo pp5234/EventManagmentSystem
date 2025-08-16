@@ -33,13 +33,6 @@ export async function getUsers(page = 1, limit = 10) {
 }
 
 export async function createUser(email, name, surname, type, password) {
-    if (!email || !password) {
-        throw new BadRequestError('Email and password are required');
-    }
-
-    const [exists] = await pool.query('SELECT * FROM client WHERE email = ?', [email]);
-    if (exists.length > 0)
-        throw new BadRequestError('Email already exists');
 
     const sql = `INSERT INTO client (email, name, surname, type, status, password) VALUES (?, ?, ?, ?, ?, ?)`;
     const status = 1;
@@ -57,12 +50,6 @@ export async function updateUser(id, email, name, surname, type, password) {
         updates.push('email = ?');
         values.push(email);
     }
-
-    const [exists] = await pool.query('SELECT user_id FROM client WHERE email = ? LIMIT 1', [email]);
-    console.log(exists);
-    if (exists.length > 0)
-        throw new BadRequestError('Email already in use by another account.');
-
     if (name) {
         updates.push('name = ?');
         values.push(name);
