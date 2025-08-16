@@ -1,13 +1,27 @@
-import jwt from 'jsonwebtoken';
+import {generateJwt} from "../utils/jwt.js";
+import {getClientByEmail, verifyLoginCredentials} from "../services/loginService.js";
+import {BadRequestError} from "../utils/errors.js";
 
-export default async function loginController (req, res) {
-    try {
-        const user = { id: req.user.user_id, name: req.user.name, surname: req.user.surname, type: req.user.type };
-        const token = await jwt.sign(user, process.env.SECRET)
+    export default async function loginController (req, res, next) {
+        try {
+            if (!req.body.email || !req.body.password) {
+                return next(new BadRequestError("Email and password are required."))
+            }
+            const dbClient = await getClientByEmail(req.body.email);
+            await verifyLoginCredentials(req.body, dbClient)
 
-        res.status(200).json({jwt: token, user : user});
-    } catch (error) {
-        console.error('Error generating token:', error);
-        res.status(500).json({ message: "INTERNAL_ERROR" });
+            const tokenPayload = {
+                id: dbClient.user_id,
+                email: dbClient.email,
+                name: dbClient.name,
+                surname: dbClient.surname,
+                type: dbClient.type
+            };
+
+            const token = generateJwt(tokenPayload);
+            res.status(200).json({jwt: token, user: tokenPayload });
+
+        } catch (err) {
+            next(err)
+        }
     }
-}

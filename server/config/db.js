@@ -8,7 +8,7 @@ const pool = mysql2.createPool({
     password: process.env.DB_PASSWORD,
 })
 
-export async function DbConnection() {
+export async function dbConnection() {
     try {
         const connection = await pool.getConnection();
         console.log('Database connection successful!')
