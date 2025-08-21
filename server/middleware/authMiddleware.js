@@ -22,6 +22,24 @@ export async function verifyToken(req, res, next) {
     }
 }
 
+export function verifyTokenGraceful(req) {
+    try {
+        const authHeader = req.headers.authorization;
+        if(!authHeader || !authHeader.startsWith('Bearer ')) {
+            return false
+        }
+        const token = authHeader.split(' ')[1];
+        if(!token) {
+            return false
+        }
+        req.user = verifyJwt(token);
+
+        return true
+    } catch (err) {
+        return false
+    }
+}
+
 export function isAdmin(req, res, next) {
     if (req.user && req.user.type === 'ADMIN') {
         return next();
