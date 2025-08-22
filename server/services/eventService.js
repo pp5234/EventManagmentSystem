@@ -99,8 +99,10 @@ export async function getEventById(id) {
 
         const fullEventDetails = {
             ...event,
+            eventReaction: null,
             tags: tags,
             comments: comments,
+            commentsReaction: [],
             rsvp_count: rsvpCount[0].rsvp_count,
             related_events: relatedEvents
         };

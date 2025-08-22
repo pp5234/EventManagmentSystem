@@ -7,6 +7,7 @@ import {
     getEventPopularController, likeEventController, updateEventController
 } from "../controllers/eventController.js";
 import {verifyToken} from "../middleware/authMiddleware.js";
+import cookieParser from "cookie-parser"
 
 const router = express.Router()
 
@@ -16,9 +17,9 @@ router.get("/top-reactions", getEventByReactionsController)
 router.get("/category/:id", getEventByCategoryController)
 router.get("/tag/:id", getEventByTagController)
 router.get("/search/:query", getEventByQueryController)
-router.get("/like/:id", likeEventController)
-router.get("/dislike/:id", dislikeEventController)
-router.get("/:id", getEventByIdController)
+router.get("/like/:id", cookieParser(), likeEventController)
+router.get("/dislike/:id", cookieParser(), dislikeEventController)
+router.get("/:id", cookieParser(), getEventByIdController)
 router.post("/", verifyToken, createEventController)
 router.put("/:id", verifyToken, updateEventController)
 router.delete("/:id", verifyToken, deleteEventController)

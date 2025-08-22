@@ -105,8 +105,21 @@ export async function getEventByIdController(req, res, next) {
         const id = req.params.id
         if(id === undefined || isNaN(id))
             return next(new BadRequestError("Id for event is missing"))
-        await incrementEventView(id)
+
+        let viewedEvents = req.cookies.viewed_events ? JSON.parse(req.cookies.viewed_events) : [];
+        let reaction = req.cookies.event_reactions ? JSON.parse(req.cookies.event_reactions) : {};
+        let currentReaction = reaction[id]
+
+        if (!viewedEvents.includes(id)) {
+            await incrementEventView(id);
+            viewedEvents.push(id);
+            res.cookie('viewed_events', JSON.stringify(viewedEvents), { maxAge: 1000 * 60 * 60 * 24  * 356, httpOnly: true });
+        }
+
         const result = await getEventById(id)
+        if(currentReaction)
+            result.eventReaction = currentReaction
+
         return res.status(200).json(result)
     } catch (err) {
         next(err)
@@ -148,12 +161,16 @@ export async function deleteEventController(req, res, next) {
 export async function likeEventController(req, res, next) {
     try {
         const id = req.params.id
-        const reaction = null
-        if(reaction === "LIKE")
+        const reactions = req.cookies.event_reactions ? JSON.parse(req.cookies.event_reactions) : {};
+        if(reactions[id] === "like")
             return next(new BadRequestError("Event is already liked"))
-        else if (reaction === "DISLIKE")
+        else if (reactions[id] === "dislike") {
             await removeDislike(id)
+            delete reactions[id]
+        }
         await addLike(id)
+        reactions[id] = "like"
+        res.cookie('event_reactions', JSON.stringify(reactions), { httpOnly: true, maxAge: 1000 * 60 * 60 * 24  * 356 })
         return res.sendStatus(204)
     }
     catch (err) {
@@ -164,12 +181,16 @@ export async function likeEventController(req, res, next) {
 export async function dislikeEventController(req, res, next) {
     try {
         const id = req.params.id
-        const reaction = null
-        if(reaction === "DISLIKE")
-            return next(new BadRequestError("Event is already liked"))
-        else if (reaction === "LIKE")
+        let reactions = req.cookies.event_reactions ? JSON.parse(req.cookies.event_reactions) : {};
+        if(reactions[id] === "dislike")
+            return next(new BadRequestError("Event is already disliked"))
+        else if (reactions[id] === "like") {
             await removeLike(id)
+            delete reactions[id]
+        }
         await addDislike(id)
+        reactions[id] = "dislike"
+        res.cookie('event_reactions', JSON.stringify(reactions), { httpOnly: true, maxAge: 1000 * 60 * 60 * 24  * 356 })
         return res.sendStatus(204)
     }
     catch (err) {
