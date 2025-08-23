@@ -5,6 +5,7 @@ import user from './routes/userRoute.js'
 import category from './routes/categoryRoute.js'
 import tag from './routes/tagRoute.js'
 import event from './routes/eventRoute.js'
+import comment from './routes/commentRoute.js'
 import {errorMiddleware, NotFoundMiddleware} from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/user', user)
 app.use('/api/category', category)
 app.use('/api/tag', tag)
 app.use('/api/event',event)
+app.use('/api/comment', comment)
 //Error handlers
 app.use(NotFoundMiddleware)
 app.use(errorMiddleware)

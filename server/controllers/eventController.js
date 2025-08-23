@@ -1,10 +1,10 @@
 import {
-    addDislike, addLike,
+    addDislikeEvent, addLikeEvent,
     createEvent,
     deleteEvent,
     getEvent,
     getEventById,
-    incrementEventView, removeDislike, removeLike,
+    incrementEventView, removeDislikeEvent, removeLikeEvent,
     updateEvent
 } from "../services/eventService.js";
 import {verifyTokenGraceful} from "../middleware/authMiddleware.js";
@@ -107,8 +107,11 @@ export async function getEventByIdController(req, res, next) {
             return next(new BadRequestError("Id for event is missing"))
 
         let viewedEvents = req.cookies.viewed_events ? JSON.parse(req.cookies.viewed_events) : [];
-        let reaction = req.cookies.event_reactions ? JSON.parse(req.cookies.event_reactions) : {};
-        let currentReaction = reaction[id]
+        let eventReaction = req.cookies.event_reactions ? JSON.parse(req.cookies.event_reactions) : {};
+        let commentsReactions = req.cookies.comments_reactions ? JSON.parse(req.cookies.comments_reactions) : {};
+
+        let currentEventReaction = eventReaction[id]
+        let currentCommentsReaction = {};
 
         if (!viewedEvents.includes(id)) {
             await incrementEventView(id);
@@ -117,8 +120,15 @@ export async function getEventByIdController(req, res, next) {
         }
 
         const result = await getEventById(id)
-        if(currentReaction)
-            result.eventReaction = currentReaction
+
+        for (const comment of result.comments) {
+            const commentId = comment.comment_id
+            if (commentId in commentsReactions)
+                result.commentsReactions[commentId] = commentsReactions[commentId]
+        }
+
+        if(currentEventReaction)
+            result.eventReaction = currentEventReaction
 
         return res.status(200).json(result)
     } catch (err) {
@@ -133,7 +143,7 @@ export async function updateEventController(req, res, next) {
         if(id === undefined || isNaN(id))
             return next(new BadRequestError("Id for event is missing"))
 
-        const [result, resultTags] = updateEvent(id, title, description, location, start_date, category, tags)
+        const [result, resultTags] = await updateEvent(id, title, description, location, start_date, category, tags)
 
         if(result.affectedRows === 0 && resultTags === 0)
             return next(new BadRequestError('Cannot delete event for this id'))
@@ -165,10 +175,10 @@ export async function likeEventController(req, res, next) {
         if(reactions[id] === "like")
             return next(new BadRequestError("Event is already liked"))
         else if (reactions[id] === "dislike") {
-            await removeDislike(id)
+            await removeDislikeEvent(id)
             delete reactions[id]
         }
-        await addLike(id)
+        await addLikeEvent(id)
         reactions[id] = "like"
         res.cookie('event_reactions', JSON.stringify(reactions), { httpOnly: true, maxAge: 1000 * 60 * 60 * 24  * 356 })
         return res.sendStatus(204)
@@ -185,10 +195,10 @@ export async function dislikeEventController(req, res, next) {
         if(reactions[id] === "dislike")
             return next(new BadRequestError("Event is already disliked"))
         else if (reactions[id] === "like") {
-            await removeLike(id)
+            await removeLikeEvent(id)
             delete reactions[id]
         }
-        await addDislike(id)
+        await addDislikeEvent(id)
         reactions[id] = "dislike"
         res.cookie('event_reactions', JSON.stringify(reactions), { httpOnly: true, maxAge: 1000 * 60 * 60 * 24  * 356 })
         return res.sendStatus(204)

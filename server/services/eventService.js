@@ -49,7 +49,7 @@ export async function getEventById(id) {
                             JOIN event_tag et ON t.tag_id = et.tag_id
                             WHERE et.event_id = ?;`
 
-    const commentsSql = `SELECT name, content, creation_date, likes, dislikes
+    const commentsSql = `SELECT comment_id, name, content, creation_date, likes, dislikes
                                 FROM comment
                                 WHERE event_id = ?
                                 ORDER BY creation_date DESC;`;
@@ -102,7 +102,7 @@ export async function getEventById(id) {
             eventReaction: null,
             tags: tags,
             comments: comments,
-            commentsReaction: [],
+            commentsReactions: {},
             rsvp_count: rsvpCount[0].rsvp_count,
             related_events: relatedEvents
         };
@@ -340,20 +340,20 @@ export async function incrementEventView(id) {
    await pool.query("UPDATE event SET views = views + 1 WHERE event_id = ?", [id]);
 }
 
-export async function addLike(eventId) {
-    await pool.query("UPDATE event SET likes = likes + 1 WHERE event_id = ?", [eventId]);
+export async function addLikeEvent(id) {
+    await pool.query("UPDATE event SET likes = likes + 1 WHERE event_id = ?", [id]);
 }
 
-export async function removeLike(eventId) {
-    await pool.query("UPDATE event SET likes = likes - 1 WHERE event_id = ?", [eventId]);
+export async function removeLikeEvent(id) {
+    await pool.query("UPDATE event SET likes = likes - 1 WHERE event_id = ?", [id]);
 }
 
-export async function addDislike(eventId) {
-    await pool.query("UPDATE event SET dislikes = dislikes + 1 WHERE event_id = ?", [eventId]);
+export async function addDislikeEvent(id) {
+    await pool.query("UPDATE event SET dislikes = dislikes + 1 WHERE event_id = ?", [id]);
 }
 
-export async function removeDislike(eventId) {
-    await pool.query("UPDATE event SET dislikes = dislikes - 1 WHERE event_id = ?", [eventId]);
+export async function removeDislikeEvent(id) {
+    await pool.query("UPDATE event SET dislikes = dislikes - 1 WHERE event_id = ?", [id]);
 }
 
 
