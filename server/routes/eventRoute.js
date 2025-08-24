@@ -8,7 +8,8 @@ import {
 } from "../controllers/eventController.js";
 import {verifyToken} from "../middleware/authMiddleware.js";
 import cookieParser from "cookie-parser"
-import {addCommentController} from "../controllers/commentController.js";
+import {addCommentController, deleteCommentController} from "../controllers/commentController.js";
+import {registrationController} from "../controllers/registrationController.js";
 
 const router = express.Router()
 
@@ -24,6 +25,7 @@ router.get("/:id", getEventByIdController);
 router.get("/", getEventController);
 router.post("/", verifyToken, createEventController);
 router.post("/:id/comment", addCommentController);
+router.post("/:id/registration", registrationController);
 router.patch("/like/:id", likeEventController);
 router.patch("/dislike/:id", dislikeEventController);
 router.put("/:id", verifyToken, updateEventController);
