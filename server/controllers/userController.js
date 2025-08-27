@@ -1,4 +1,4 @@
-import {BadRequestError, ForbiddenError} from "../utils/errors.js";
+import {BadRequestError} from "../utils/errors.js";
 import {changeUserStatus, createUser, deleteUser, getUsers, updateUser} from "../services/userService.js";
 
 
