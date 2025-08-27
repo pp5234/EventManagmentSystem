@@ -11,7 +11,7 @@ export async function getUsers(page = 1, limit = 10) {
 
     const countSql = 'SELECT COUNT(*) AS total FROM client';
     const listSql  = `
-        SELECT user_id, name, surname, type, status
+        SELECT user_id, name, surname, email, type, status
         FROM client
         ORDER BY user_id ASC
         LIMIT ? OFFSET ?`;
@@ -70,6 +70,9 @@ export async function updateUser(id, email, name, surname, type, password) {
     if (updates.length === 0)
         throw new BadRequestError("No fields provided")
 
+    const [row] = await pool.query("SELECT type FROM client WHERE user_id = ?;", [id]);
+    if (row[0].type === "ADMIN" && row[0].type !== type)
+        throw new ForbiddenError("You cannot change role to an admin user.")
 
     const sql = `UPDATE client SET ${updates.join(', ')} WHERE user_id = ?`;
     values.push(id);
@@ -81,7 +84,6 @@ export async function updateUser(id, email, name, surname, type, password) {
 
 export async function changeUserStatus(id) {
     const [row] = await pool.query("SELECT type FROM client WHERE user_id = ?;", [id]);
-    console.log(row[0].type)
     if (row[0].type !== "EVENT_CREATOR")
         throw new ForbiddenError("You cannot change status to an admin user.")
 
