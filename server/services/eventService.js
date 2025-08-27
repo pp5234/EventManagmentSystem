@@ -1,6 +1,5 @@
 import pool from "../config/db.js";
 import {BadRequestError, NotFoundError} from "../utils/errors.js";
-import * as sqlite from "node:sqlite";
 
 export async function getEvent(page = 1, limit = 10, option, filter) {
     const { query, countQuery, params, isSimple } = prepareEventQueries(option, filter);
@@ -134,7 +133,6 @@ export async function createEvent(title, description, author, category, location
 
         if(tags !== undefined && Array.isArray(tags)) {
             for(let tagName of tags) {
-                console.log("Zapocinjem proveru za tag " + tagName)
                 tagName = tagName.trim()
                 if(tagName === '') continue;
 
@@ -144,19 +142,15 @@ export async function createEvent(title, description, author, category, location
                 let tagId
 
                 if(existingTag.length > 0) {
-                    console.log("Tag " + existingTag[0].tag_id + " postoji")
                     tagId = existingTag[0].tag_id
                 }
                 else {
-                    console.log("Tag " + tagName + " nepostoji, kreiram ga")
                     const [newTagResult] = await connection.query("INSERT INTO tag (tag_id, name) VALUES (NULL,?)", [tagName]);
                     tagId = newTagResult.insertId;
-                    console.log("Tag " + tagId + " kreiran")
                 }
 
                 const tagSql = "INSERT INTO event_tag (event_id, tag_id) VALUES (?, ?)";
                 await connection.query(tagSql, [rows.insertId, tagId]);
-                console.log("Kreirao vezu " + rows.insertId + " " + tagId)
             }
         }
         await connection.commit();
@@ -199,26 +193,23 @@ export async function updateEvent(id, title, description, location, start_date, 
             values.push(start_date)
         }
         if(category) {
-            console.log(category)
             const isCategorySql = "SELECT category_id FROM category WHERE name = ?"
             const [categoryRow] = await connection.query(isCategorySql, [category])
-            console.log(categoryRow.length)
-            console.log(categoryRow)
             if(categoryRow.length > 0) {
                 updates.push("category = ?")
                 values.push(categoryRow[0].category_id)
             }
         }
-        let result = null
+
+        if (updates.length === 0) {
+            return new BadRequestError("Updating fields are empty for event")
+        }
+        values.push(id)
+
         let resultTag = null
 
-        if (updates.length !== 0) {
-            values.push(id)
-            console.log(updates)
-            console.log(values)
-            const sql  = `UPDATE event SET ${updates.join(', ')} WHERE event_id = ?`
-            const [result] = await connection.query(sql, values)
-        }
+        const sql  = `UPDATE event SET ${updates.join(', ')} WHERE event_id = ?`
+        const [result] = await connection.query(sql, values)
 
         if(Array.isArray(tags)) {
 
@@ -269,7 +260,7 @@ function prepareEventQueries(number, filter) {
     switch (number) {
         case 1: // Najnoviji događaji
             isSimple = true;
-            query = `SELECT e.event_id, e.title, SUBSTRING(e.description, 1, 150) AS description, e.creation_date, c.name AS category_name
+            query = `SELECT e.event_id, e.title, SUBSTRING(e.description, 1, 150) AS description, e.start_date, e.creation_date, c.name AS category_name
                      FROM event AS e
                      INNER JOIN category AS c ON e.category = c.category_id
                      ORDER BY e.creation_date DESC LIMIT 10`;
@@ -324,7 +315,7 @@ function prepareEventQueries(number, filter) {
                      LIMIT 3;`
             break;
         default:
-            query = `SELECT e.event_id, e.title, e.creation_date, c.name AS author_name
+            query = `SELECT e.event_id, e.title, SUBSTRING(e.description, 1, 150) AS description, e.location, e.start_date, e.creation_date, c.name AS author_name
                      FROM event AS e
                      INNER JOIN client AS c ON e.author = c.user_id
                      ORDER BY e.creation_date DESC LIMIT ? OFFSET ?`;
