@@ -7,10 +7,15 @@ import tag from './routes/tagRoute.js'
 import event from './routes/eventRoute.js'
 import comment from './routes/commentRoute.js'
 import {errorMiddleware, NotFoundMiddleware} from "./middleware/errorMiddleware.js";
+import cors from "cors";
 
 const app = express();
 const port = process.env.PORT
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
 app.use(express.json());
 
 app.use('/api/login', login)
