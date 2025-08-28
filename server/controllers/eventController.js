@@ -88,7 +88,7 @@ export async function createEventController(req, res, next) {
         if(!title || !description || !category || !location || !start_date){
             return next(new BadRequestError('Incorrect form for event'))
         }
-        if(!capacity)
+        if(!capacity || capacity < 1)
            capacity = null
 
         const result = await createEvent(title, description, author, category, location, start_date, capacity, tags)
@@ -111,7 +111,6 @@ export async function getEventByIdController(req, res, next) {
         let commentsReactions = req.cookies.comments_reactions ? JSON.parse(req.cookies.comments_reactions) : {};
 
         let currentEventReaction = eventReaction[id]
-        let currentCommentsReaction = {};
 
         if (!viewedEvents.includes(id)) {
             await incrementEventView(id);
@@ -143,8 +142,7 @@ export async function updateEventController(req, res, next) {
         if(id === undefined || isNaN(id))
             return next(new BadRequestError("Id for event is missing"))
 
-        const [result, resultTags] = await updateEvent(id, title, description, location, start_date, category, tags)
-
+        const { result, resultTags } = await updateEvent(id, title, description, location, start_date, category, tags)
         if(result.affectedRows === 0 && resultTags === 0)
             return next(new BadRequestError('Cannot delete event for this id'))
 
