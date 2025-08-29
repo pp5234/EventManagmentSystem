@@ -3,8 +3,7 @@ import {ForbiddenError} from "../utils/errors.js";
 
 export async function createRegistration(id, email, user) {
     const [sqlUser] = await pool.query("SELECT * FROM client WHERE email = ?", [email]);
-
-    if (sqlUser[0].email && sqlUser[0].email !== user.email)
+    if (sqlUser.length > 0 && (user === undefined || sqlUser[0].email !== user.email))
         throw new ForbiddenError("Only logged user with that email can register")
 
     const sql = `
