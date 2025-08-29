@@ -14,8 +14,6 @@ export async function verifyLoginCredentials(credentials, dbCredentials) {
     const match = await bcrypt.compare(credentials.password, dbCredentials.password)
     if (!match)
         throw new UnauthorizedError ('Password not match');
-    if (!(credentials.name === dbCredentials.name && credentials.surname === dbCredentials.surname))
-        throw new UnauthorizedError('Name isn\'t valid');
     if (dbCredentials.status === 0)
         throw new ForbiddenError("User has inactive status");
 }
