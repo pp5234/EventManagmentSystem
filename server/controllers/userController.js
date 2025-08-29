@@ -1,5 +1,5 @@
 import {BadRequestError} from "../utils/errors.js";
-import {changeUserStatus, createUser, deleteUser, getUsers, updateUser} from "../services/userService.js";
+import {changeUserStatus, createUser, deleteUser, getUsers, isValidEmail, updateUser} from "../services/userService.js";
 
 
 export async function getUserController(req, res, next) {
@@ -22,6 +22,8 @@ export async function createUserController(req, res, next) {
             return next(new BadRequestError("Missing required field"))
         if (password.length < 8)
             return next(new BadRequestError("Password must be at least 8 characters"))
+        if(!isValidEmail(email))
+            return next(new BadRequestError("Invalid email address"))
 
         const result = await createUser(email.trim(), name.trim(), surname.trim(), type.trim(), password)
 

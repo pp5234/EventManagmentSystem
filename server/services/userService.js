@@ -47,6 +47,8 @@ export async function updateUser(id, email, name, surname, type, password) {
     const values = [];
 
     if (email) {
+        if(!isValidEmail(email))
+            throw new BadRequestError("Invalid email address");
         updates.push('email = ?');
         values.push(email);
     }
@@ -63,6 +65,8 @@ export async function updateUser(id, email, name, surname, type, password) {
         values.push(type);
     }
     if (password) {
+        if(password.length < 8)
+            throw new BadRequestError("Password must be at least 8 characters");
         updates.push('password = ?');
         values.push(await hashPassword(password));
     }
@@ -101,6 +105,11 @@ export async function deleteUser(id) {
     }
     const [result] = await pool.query(`DELETE FROM client WHERE user_id = ?`, [id]);
     return result;
+}
+
+export function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
 
 
